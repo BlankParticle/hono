@@ -849,6 +849,15 @@ describe('Routing', () => {
 })
 
 describe('param and query', () => {
+  it('Should return wildcard parameters', async () => {
+    const app = new Hono()
+    app.get('/thing/*', (c) => c.json(c.req.param()))
+
+    const res = await app.request('/thing/foo/bar')
+
+    expect(await res.json()).toEqual({ '*': 'foo/bar' })
+  })
+
   const apps: Record<string, Hono> = {}
   apps['get by name'] = (() => {
     const app = new Hono()

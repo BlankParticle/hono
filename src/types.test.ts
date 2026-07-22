@@ -671,6 +671,18 @@ describe('Path parameters', () => {
     type verify = Expect<Equal<Expected, Actual>>
   })
 
+  test('ParamKeys with wildcard', () => {
+    type Actual = ParamKeys<'/things/*'>
+    type Expected = '*'
+    type verify = Expect<Equal<Expected, Actual>>
+  })
+
+  test('ParamKeys without a wildcard segment', () => {
+    type Actual = ParamKeys<'/things*'>
+    type Expected = never
+    type verify = Expect<Equal<Expected, Actual>>
+  })
+
   describe('ParamKeyToRecord', () => {
     test('With ?', () => {
       type Actual = ParamKeyToRecord<'/animal/type?'>
@@ -685,6 +697,15 @@ describe('Path parameters', () => {
   })
 
   describe('Path parameters in app', () => {
+    test('Wildcard parameters - /things/*', () => {
+      const app = new Hono()
+      app.get('/things/*', (c) => {
+        expectTypeOf(c.req.param('*')).toEqualTypeOf<string>()
+        expectTypeOf(c.req.param()).toEqualTypeOf<{ '*': string }>()
+        return c.text(c.req.param('*'))
+      })
+    })
+
     test('Optional parameters - /api/:a/:b?', () => {
       const app = new Hono()
       const routes = app.get('/api/:a/:b?', (c) => {
@@ -4020,7 +4041,11 @@ describe('Handlers returning Promise<void>', () => {
     type Expected = {
       '*': {
         $post: {
-          input: {}
+          input: {
+            param: {
+              '*': string
+            }
+          }
           output: 'after'
           outputFormat: 'text'
           status: ContentfulStatusCode

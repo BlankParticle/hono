@@ -2556,7 +2556,9 @@ type ExtractParams<Path extends string> = string extends Path
     ? { [K in Param | keyof ExtractParams<`/${Rest}`>]: string }
     : Path extends `${infer _Start}:${infer Param}`
       ? { [K in Param]: string }
-      : never
+      : Path extends `${infer _Start}*`
+        ? { '*': string }
+        : never
 
 type FlattenIfIntersect<T> = T extends infer O ? { [K in keyof O]: O[K] } : never
 
@@ -2701,7 +2703,9 @@ type ParamKey<Component> = Component extends `:${infer NameWithPattern}`
       ? `${Name}?`
       : Name
     : NameWithPattern
-  : never
+  : Component extends '*'
+    ? '*'
+    : never
 
 export type ParamKeys<Path> = Path extends `${infer Component}/${infer Rest}`
   ? ParamKey<Component> | ParamKeys<Rest>

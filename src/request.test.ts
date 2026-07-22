@@ -39,6 +39,35 @@ describe('Query', () => {
 })
 
 describe('Param', () => {
+  test('req.param() returns the trailing wildcard capture', () => {
+    const rawRequest = new Request('http://localhost/thing/foo/bar%20baz')
+    const route = { path: '/thing/*' } as RouterRoute
+    const req = new HonoRequest<'/thing/*'>(rawRequest, '/thing/foo/bar%20baz', [
+      [[[undefined, route], {}]],
+    ])
+
+    expect(req.param('*')).toBe('foo/bar baz')
+    expect(req.param()).toEqual({ '*': 'foo/bar baz' })
+  })
+
+  test('req.param() returns an empty trailing wildcard capture', () => {
+    const rawRequest = new Request('http://localhost/thing')
+    const route = { path: '/thing/*' } as RouterRoute
+    const req = new HonoRequest<'/thing/*'>(rawRequest, '/thing', [[[[undefined, route], {}]]])
+
+    expect(req.param('*')).toBe('')
+    expect(req.param()).toEqual({ '*': '' })
+  })
+
+  test('req.param() returns the first wildcard capture when a route has multiple wildcards', () => {
+    const rawRequest = new Request('http://localhost/a/x/b/z/w')
+    const route = { path: '/a/*/b/*' } as RouterRoute
+    const req = new HonoRequest<'/a/*/b/*'>(rawRequest, '/a/x/b/z/w', [[[[undefined, route], {}]]])
+
+    expect(req.param('*')).toBe('x')
+    expect(req.param()).toEqual({ '*': 'x' })
+  })
+
   test('req.param() should return empty string for zero-length match', () => {
     // Simulate a route like '/:remaining{.*}' matching '/'
     const rawRequest = new Request('http://localhost/')
